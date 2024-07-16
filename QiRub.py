@@ -2,7 +2,7 @@
 This Source is the Main part of QiRub Project
 
 QiRub is a Project for Rubika Client Handler
-QiRub includes ( 'httpx', 'pycryptodome', 'fake_useragent' )
+QiRub includes ( 'httpx', 'pycryptodome', 'fake_useragent', 'rich', 'mutagen' )
 
 In fact when you import the ClientMessenger class or
     run the source what called ClientMessenger class, its automatically set a
@@ -31,7 +31,7 @@ import io
 import os
 import base64
 
-__version__ = "1.0.5"
+__version__ = "1.0.6"
 
 class ClientMessenger(object):
     def __init__(self, AuthToken: str, PrivateKey: str, UseFakeUserAgent: bool = True, Proxy = None):
@@ -127,7 +127,7 @@ class ClientMessenger(object):
         else:
             p = phone
         
-        return p
+        return f"98{p}"
     
     def guessGuid(self, guid: str):
         if guid.startswith("c0"):
@@ -308,19 +308,19 @@ class ClientMessenger(object):
                                    "channelPreviewByJoinLink", self.ufa) if use_endpoint_hash else self.network.option({"hash_link": link},
                                    "channelPreviewByJoinLink", self.ufa)
     
-    def checkChannelUsername(self, username: str, replace_hashtag: bool = True):
+    def checkChannelUsername(self, username: str, replace_tag: bool = True):
         return self.network.option({"username": username.replace("@", "")},
-                                   "checkChannelUsername", self.ufa) if replace_hashtag else self.network.option({"username": username},
+                                   "checkChannelUsername", self.ufa) if replace_tag else self.network.option({"username": username},
                                    "checkChannelUsername", self.ufa)
     
-    def checkChannelUsernames(self, usernames: list, replace_hashtag: bool = True):
+    def checkChannelUsernames(self, usernames: list, replace_tag: bool = True):
         if not type(usernames) == list:
             raise ValueError("`usernames` parameter in checkChannelUsernames is not list")
         
         dbs = {}
 
         for username in usernames:
-            dbs[username] = self.checkChannelUsername(username=username, replace_hashtag=replace_hashtag)
+            dbs[username] = self.checkChannelUsername(username=username, replace_tag=replace_tag)
 
         return dbs
     
@@ -517,9 +517,9 @@ class ClientMessenger(object):
         return self.setGroupAdmin(channel_guid=channel_guid, member_guid=member_guid,
                                   action=action, access_list=access_list)
     
-    def updateChannelUsername(self, channel_guid: str, username: str, replace_hashtag: bool = True):
+    def updateChannelUsername(self, channel_guid: str, username: str, replace_tag: bool = True):
         return self.network.option({"channel_guid": channel_guid,
-                                    "username": username.replace("@", "")}, "updateChannelUsername", self.ufa) if replace_hashtag else self.network.option({"channel_guid": channel_guid,
+                                    "username": username.replace("@", "")}, "updateChannelUsername", self.ufa) if replace_tag else self.network.option({"channel_guid": channel_guid,
                                     "username": username}, "updateChannelUsername", self.ufa)
     
     def sendMessage(self, chat_object_guid: str, text_message: str, reply_to_message_id: str = None):
@@ -621,7 +621,7 @@ class ClientMessenger(object):
             type="File"
         )
     
-    def sendImage(self, objectGuid:str, file:str, messageId:str, text:str, isSpoil:bool, thumbInline:str, fileName:str) -> dict:
+    def sendImage(self, objectGuid:str, file:str, fileName:str, text:str = None, messageId:str = None, isSpoil:bool = False, thumbInline:str = None) -> dict:
         return self.__sendFileInline(
             objectGuid=objectGuid,
             file=file,
@@ -633,7 +633,7 @@ class ClientMessenger(object):
             customThumbInline=thumbInline
         )
     
-    def sendVideo(self, objectGuid:str, file:str, messageId:str, text:str, isSpoil:bool, thumbInline:str, fileName:str) -> dict:
+    def sendVideo(self, objectGuid:str, file:str, fileName:str, text:str, messageId:str = None, isSpoil:bool = False, thumbInline:str = None) -> dict:
         return self.__sendFileInline(
             objectGuid=objectGuid,
             file=file,
@@ -645,7 +645,7 @@ class ClientMessenger(object):
             customThumbInline=thumbInline
         )
     
-    def sendVideoMessage(self, objectGuid:str, file:str, messageId:str, text:str, thumbInline:str, fileName:str) -> dict:
+    def sendVideoMessage(self, objectGuid:str, file:str, fileName:str, text:str, messageId:str = None, thumbInline:str = None) -> dict:
         return self.__sendFileInline(
             objectGuid=objectGuid,
             file=file,
@@ -656,7 +656,7 @@ class ClientMessenger(object):
             customThumbInline=thumbInline
         )
     
-    def sendGif(self, objectGuid:str, file:str, messageId:str, text:str, thumbInline:str, fileName:str) -> dict:
+    def sendGif(self, objectGuid:str, file:str, fileName:str, text:str, messageId:str = None, thumbInline:str = None) -> dict:
         return self.__sendFileInline(
             objectGuid=objectGuid,
             file=file,
@@ -667,7 +667,7 @@ class ClientMessenger(object):
             customThumbInline=thumbInline
         )
     
-    def sendMusic(self, objectGuid:str, file:str, messageId:str, text:str, fileName:str, performer:str) -> dict:
+    def sendMusic(self, objectGuid:str, file:str, fileName:str, text:str, messageId:str = None, performer = None, thumbInline:str = None) -> dict:
         return self.__sendFileInline(
             objectGuid=objectGuid,
             file=file,
@@ -678,7 +678,7 @@ class ClientMessenger(object):
             performer=performer
         )
     
-    def sendVoice(self, objectGuid:str, file:str, messageId:str, text:str, fileName:str, time:int) -> dict:
+    def sendVoice(self, objectGuid:str, file:str, fileName:str, text:str, messageId:str = None) -> dict:
         return self.__sendFileInline(
             objectGuid=objectGuid,
             file=file,
@@ -686,10 +686,10 @@ class ClientMessenger(object):
             messageId=messageId,
             fileName=fileName,
             type="Voice",
-            time=time
+            time=self.getVoiceDuration(open(file, 'rb').read())
         )
     
-    def sendLocation(self, objectGuid:str, latitude:int, longitude:int, messageId:str) -> dict:
+    def sendLocation(self, objectGuid:str, latitude:int, longitude:int, messageId:str = None) -> dict:
         return self.network.option(
             method="sendMessage",
             input={
@@ -725,3 +725,299 @@ class ClientMessenger(object):
         if metadata[0] != []:
             data["metadata"] = {"meta_data_parts": metadata[0]}
         return self.network.option(data, "editMessage", self.ufa)
+    
+    def deleteAvatar(self, object_guid: str, avatar_id: str):
+        return self.network.option({"object_guid": object_guid, "avatar_id": avatar_id}, "deleteAvatar", self.ufa)
+    
+    def deleteChatHistory(self, object_guid: str, last_message_id: str):
+        return self.network.option({"object_guid": object_guid, "last_message_id": last_message_id}, "deleteChatHistory", self.ufa)
+    
+    def getAbsObjects(self, object_guids: list):
+        if type(object_guids) == str:
+            object_guids = [object_guids]
+
+        return self.network.option({"object_guid": object_guids}, "getAbsObjects", self.ufa)
+        
+    def abstractionObjects(self, object_guids: list):
+        return self.getAbsObjects(object_guids=object_guids)
+    
+    def getAvatars(self, object_guid: str):
+        return self.network.option({'object_guid': object_guid}, "getAvatars", self.ufa)
+    
+    def getAvatarsArray(self, object_guids: list):
+        if not type(object_guids) == list:
+            raise ValueError("`object_guids` parameter of method getAvatarsArray is not list")
+        
+        dbs = {}
+
+        for guid in object_guids:
+            dbs[guid] = self.getAvatars(guid)
+
+        return dbs
+    
+    def getChats(self, start_id: str = None):
+        return self.network.option({"start_id": start_id}, "getChats", self.ufa)
+    
+    def getLinkFromAppUrl(self, app_url: str):
+        return self.network.option({"app_url": app_url}, "getLinkFromAppUrl", self.ufa)
+    
+    @property
+    def search_chat_messages_types(self):
+        return (
+            "Text",
+            "Hashtag"
+        )
+
+    def searchTextMessages(self, object_guid: str, text: str):
+        return self.network.option({"object_guid": object_guid, "search_text": text, "type": "Text"}, "searchChatMessages", self.ufa)
+    
+    def searchHashtagMessages(self, object_guid: str, hashtag: str):
+        return self.network.option({"object_guid": object_guid, "search_text": hashtag, "type": "Hashtag"}, "searchChatMessages", self.ufa)
+    
+    def seenChats(self, seen_dictionary: dict):
+        return self.network.option({"seen_list": seen_dictionary}, "seenChats", self.ufa)
+    
+    @property
+    def chat_activities(self):
+        return (
+            "Typing",
+            "Uploading",
+            "Recording"
+        )
+
+    def sendChatActivity(self, object_guid: str, activity: str = "Typing"):
+        if not activity in self.chat_activities:
+            raise ValueError("`activity` parameter does not available in sendChatActivity, to see more options print `chat_activities` property")
+        
+        return self.network.option({
+            "object_guid": object_guid,
+            "activity": activity
+        })
+    
+    @property
+    def chat_actions(self): 
+        return ('Mute', 'Unmute')
+
+    def setActionChat(self, object_guid: str, action: str = "Mute"):
+        if not action in self.chat_actions:
+            raise ValueError("`action` parameter does not available in setActionChat, to see more options print `chat_actions` property")
+        
+        return self.network.option({"object_guid": object_guid, "action": action}, "setActionChat", self.ufa)
+    
+    def uploadAvatar(self, object_guid: str, image: str):
+        if not os.path.exists(image):
+            raise ValueError("`image` parameter, get an unexist path")
+        
+        database = {}
+
+        if type(image) == str:
+            database['file_name'] = image.split("/")[-1]
+        
+        else:
+            database['file_name'] = "qirubika.jpg"
+
+        uploaded = self.network.upload(image, database["file_name"], os.path.getsize(image))
+
+        return self.network.option({
+            "object_guid": object_guid,
+            "thumnail_file_id": uploaded['id'],
+            "main_file_id": uploaded['id']
+        }, "uploadAvatar", self.ufa)
+    
+    def addAddressBook(self, phone: str, first_name: str, last_name: str = ''):
+        return self.network.option({"phone": phone, "first_name": first_name, "last_name": last_name}, "addAddressBook", self.ufa)
+    
+    def deleteContact(self, user_guid: str):
+        return self.network.option({"user_guid": user_guid}, "deleteContact", self.ufa)
+    
+    def getContacts(self, start_id: str = None):
+        return self.network.option({"start_id": start_id}, "getContacts", self.ufa)
+    
+    def getContactsUpdates(self):
+        return self.network.option({"state": round(time.time()) - 150}, "getContactsUpdates", self.ufa)
+    
+    def getObjectByUsername(self, username: str, replace_tag: bool = True):
+        return self.network.option({"username": username.replace("@", "")}, "getObjectByUsername", self.ufa) if replace_tag else \
+               self.network.option({"username": username}, "getObjectByUsername", self.ufa)
+    
+    def getProfileLinkItems(self, object_guid: str):
+        return self.network.option({"object_guid": object_guid}, "getProfileLinkItems", self.ufa)
+    
+    def getRelatedObjects(self, object_guid: str):
+        return self.network.option({"object_guid": object_guid}, "getRelatedObjects", self.ufa)
+    
+    def getTranscription(self, message_id: str, transcription_id: str):
+        return self.network.option({"message_id": message_id, "transcription_id": transcription_id}, "getTranscription", self.ufa)
+    
+    def searchGlobalObjects(self, search_text: str):
+        return self.network.option({"search_text": search_text}, "searchGlobalObjects", self.ufa)
+    
+    def addToMyGifSet(self, object_guid: str, message_id: str):
+        return self.network.option({"object_guid": object_guid, "message_id": message_id}, "addToMyGifSet", self.ufa)
+    
+    def getMyGifSet(self):
+        return self.network.option({}, "getMyGifSet", self.ufa)
+    
+    def removeFromMyGifSet(self, file_id: str):
+        return self.network.option({"file_id": file_id}, "removeFromMyGifSet", self.ufa)
+    
+    def addGroup(self, title: str, member_guids: list):
+        if type(member_guids) == str:
+            member_guids = [member_guids]
+
+        return self.network.option({"title": title, "member_guids": member_guids}, "addGroup", self.ufa)
+    
+    def addGroupMembers(self, group_guid: str, member_guids: list):
+        if type(member_guids) == str:
+            member_guids = [member_guids]
+        
+        return self.network.option({"group_guid": group_guid, "member_guids": member_guids}, "addGroupMembers", self.ufa)
+    
+    @property
+    def ban_group_member_actions(self):
+        return (
+            "Set",
+            "Unset"
+        )
+
+    def banGroupMember(self, group_guid: str, member_guid: str):
+        return self.network.option({"group_guid": group_guid, "member_guid": member_guid,
+                                    "action": "Set"}, "banGroupMember", self.ufa)
+    
+    def createGroupVoiceChat(self, group_guid: str):
+        return self.network.option({"group_guid": group_guid}, "createGroupVoiceChat", self.ufa)
+    
+    def deleteNoAccessGroupChat(self, group_guid: str):
+        return self.network.option({"group_guid": group_guid}, "deleteNoAccessGroupChat", self.ufa)
+    
+    def editGroupInfo(self,
+                group_guid: str,
+                title: str = None,
+                description: str = None,
+                slow_mode: str = None,
+                event_messages: bool = None,
+                sign_messages: str = None,
+                chat_reaction_setting: dict = None,
+                chat_history_for_new_members: str = "Hidden"):
+        
+        updatedParameters = []
+        inp = {
+            "group_guid": group_guid
+        }
+
+        if title is not None:
+            inp['title'] = title
+            updatedParameters.append('title')
+
+        if description is not None:
+            inp['description'] = description
+            updatedParameters.append('description')
+
+        if slow_mode is not None:
+            inp['slow_mode'] = slow_mode
+            updatedParameters.append("slow_mode")
+
+        if event_messages is not None:
+            inp['event_messages'] = event_messages
+            updatedParameters.append("event_messages")
+
+        if sign_messages is not None:
+            inp['sign_messages'] = sign_messages
+            updatedParameters.append('sign_messages')
+
+        if chat_reaction_setting is not None:
+            inp['chat_reaction_setting'] = chat_reaction_setting
+            updatedParameters.append('chat_reaction_setting')
+
+        if chat_history_for_new_members is not None:
+            if chat_history_for_new_members not in self.chat_history_for_new_members_list:
+                raise ValueError('`chat_history_for_new_members` parameter in editChannelInfo is not available, to see more options use `chat_history_for_new_members_list` property.')
+
+            inp['chat_history_for_new_members'] = chat_history_for_new_members
+            updatedParameters.append('chat_history_for_new_members')
+
+        inp['updated_parameters'] = updatedParameters
+
+        return self.network.option(inp, "editChannelInfo", self.ufa)
+    
+    def getBannedGroupMembers(self, group_guid: str, start_id: str = None):
+        return self.network.option({"group_guid": group_guid, "start_id": start_id}, "getBannedGroupMembers", self.ufa)
+    
+    def getGroupAdminAccessList(self, group_guid: str, member_guid: str):
+        return self.network.option({"group_guid": group_guid, "member_guid": group_guid}, "getGroupAdminAccessList", self.ufa)
+    
+    def getGroupAdminMembers(self, group_guid: str, start_id: str = None):
+        return self.network.option({"group_guid": group_guid, "start_id": start_id}, "getGroupAdminMembers", self.ufa)
+    
+    def getGroupAllMembers(self, group_guid: str, search_text: str = None, start_id: str = None):
+        return self.network.option({"group_guid": group_guid, "search_text": search_text, "start_id": start_id}, "getGroupAllMembers", self.ufa)
+    
+    def getGroupDefaultAccess(self, group_guid: str):
+        return self.network.option({"group_guid": group_guid}, "getGroupDefaultAccess", self.ufa)
+    
+    def getGroupInfo(self, group_guid: str):
+        return self.network.option({"group_guid": group_guid}, "getGroupInfo", self.ufa)
+    
+    def getGroupLink(self, group_guid: str):
+        return self.network.option({"group_guid": group_guid}, "getGroupInfo", self.ufa)
+    
+    def getGroupMentionList(self, group_guid: str, search_mention: str = None):
+        return self.network.option({"group_guid": group_guid, "search_mention": search_mention}, "getGroupMentionList", self.ufa)
+    
+    def getGroupVoiceChatUpdates(self, group_guid: str, voice_chat_id: str):
+        return self.network.option({"group_guid": group_guid, "voice_chat_id": voice_chat_id, "state": round(time.time()) - 150}, "getGroupVoiceChatUpdates", self.ufa)
+    
+    def groupPreviewByJoinLink(self, link: str, use_endpoint_hash: bool = True):
+        return self.network.option({"hash_link": self.endpointHash(link)}, "groupPreviewByJoinLink", self.ufa) if use_endpoint_hash else \
+               self.network.option({"hash_link": link}, "groupPreviewByJoinLink", self.ufa)
+    
+    def leaveGroupVoiceChat(self, group_guid: str, voice_chat_id: str):
+        return self.network.option({"group_guid": group_guid, "voice_chat_id": voice_chat_id}, "leaveGroupVoiceChat", self.ufa)
+    
+    def removeGroup(self, group_guid: str):
+        return self.network.option({"group_guid": group_guid}, "removeGroup", self.ufa)
+    
+    def setGroupDefaultAccess(self, group_guid: str, access_list: list = []):
+        if type(access_list) == str:
+            access_list = [access_list]
+
+        return self.network.option({"group_guid": group_guid, "access_list": access_list}, "setGroupDefaultAccess", self.ufa)
+    
+    def setGroupLink(self, group_guid: str):
+        return self.network.option({"group_guid": group_guid}, "setGroupLink", self.ufa)
+    
+    def changeGroupLink(self, group_guid: str):
+        return self.setGroupLink(group_guid=group_guid)
+    
+    def setGroupVoiceChatSetting(self, group_guid: str, voice_chat_id: str, title: str = None):
+        inp = {
+            "group_guid": group_guid,
+            "voice_chat_id": voice_chat_id
+        }
+
+        updatedParameters = []
+
+        if title is not None:
+            inp['title'] = title
+            updatedParameters.append("title")
+
+        inp['updated_parameters'] = updatedParameters
+
+        return self.network.option(inp, "setGroupVoiceChatSetting", self.ufa)
+    
+    def checkUserUsername(self, username: str, replace_tag: bool = True):
+        return self.network.option({"username": username.replace("@", "")}, "checkUserUsername", self.ufa) if replace_tag else \
+               self.network.option({"username": username}, "checkUserUsername", self.ufa)
+    
+    def deleteUserChat(self, user_guid: str, last_deleted_message_id: str):
+        return self.network.option({"user_guid": user_guid, "last_deleted_message_id": last_deleted_message_id}, "deleteUserChat", self.ufa)
+    
+    @property
+    def block_user_actions(self):
+        return (
+            "Block",
+            "Unblock"
+        )
+
+    def blockUser(self, user_guid: str):
+        return self.network.option({"user_guid": user_guid, "action": "Block"}, "setBlockUser", self.ufa)
