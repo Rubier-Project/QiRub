@@ -4,7 +4,7 @@ Client for Rubika Messenger
 # Explain
 
 QiRub is a Project for Rubika Client Handler
-+ QiRub includes ( 'httpx', 'pycryptodome', 'fake_useragent' )
++ QiRub includes ( 'httpx', 'pycryptodome', 'fake_useragent', 'rich', 'mutagen' )
 
 In fact when you import the ClientMessenger class or
     run the source what called ClientMessenger class, its automatically set a
