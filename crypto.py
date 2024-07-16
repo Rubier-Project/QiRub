@@ -9,10 +9,10 @@ Github: https://github.com/Rubier-Project/QiRub
 
 """
 
-import base64,Cryptodome.Util.Padding,Cryptodome.Hash
-from Cryptodome.Cipher import AES
-from Cryptodome.Signature import pkcs1_15
-from Cryptodome.PublicKey import RSA 
+import base64,crypto.Util.Padding,crypto.Hash
+from crypto.Cipher import AES
+from crypto.Signature import pkcs1_15
+from crypto.PublicKey import RSA 
 
 class encryption:
   def __init__(self, auth:str, private_key:str=None):
