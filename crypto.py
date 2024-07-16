@@ -26,13 +26,13 @@ class encryption:
   def secret(self, e):
         return ''.join([chr((ord(char) - ord('0') + 5) % 10 + ord('0')) if char.isdigit() else chr((ord(char) - ord('a') + 9) % 26 + ord('a')) for char in (e[16:24] + e[0:8] + e[24:32] + e[8:16])])
   def encrypt(self, text):
-        return base64.b64encode(AES.new(self.key, AES.MODE_CBC, self.iv).encrypt(Cryptodome.Util.Padding.pad(text.encode('UTF-8'), AES.block_size))).decode('UTF-8')
+        return base64.b64encode(AES.new(self.key, AES.MODE_CBC, self.iv).encrypt(Crypto.Util.Padding.pad(text.encode('UTF-8'), AES.block_size))).decode('UTF-8')
   def decrypt(self, text):
-        return Cryptodome.Util.Padding.unpad(AES.new(self.key, AES.MODE_CBC, self.iv).decrypt(base64.urlsafe_b64decode(text.encode('UTF-8'))), AES.block_size).decode('UTF-8')
+        return Crypto.Util.Padding.unpad(AES.new(self.key, AES.MODE_CBC, self.iv).decrypt(base64.urlsafe_b64decode(text.encode('UTF-8'))), AES.block_size).decode('UTF-8')
   def Sign(self, data_enc:str):
-        return base64.b64encode(pkcs1_15.new(self.keypair).sign(Cryptodome.Hash.SHA256.new(data_enc.encode("utf-8")))).decode("utf-8")
+        return base64.b64encode(pkcs1_15.new(self.keypair).sign(Crypto.Hash.SHA256.new(data_enc.encode("utf-8")))).decode("utf-8")
   def decryptRsaOaep(private:str,data_enc:str):
-        return Cryptodome.Cipher.PKCS1_OAEP.new(RSA.import_key(private.encode("utf-8"))).decrypt(base64.b64decode(data_enc)).decode("utf-8")
+        return Crypto.Cipher.PKCS1_OAEP.new(RSA.import_key(private.encode("utf-8"))).decrypt(base64.b64decode(data_enc)).decode("utf-8")
   def rsaKey():
        Grt = RSA.generate(1024)
        return encryption.change(base64.b64encode(Grt.publickey().export_key()).decode("utf-8")),Grt.export_key().decode("utf-8")
