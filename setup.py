@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
   name = 'QiRub',         # How you named your package folder (MyLib)
   packages = ['QiRub'],   # Chose the same as "name"
-  version = '1.0.5',      # Start with a small number and increase it with every change you make
+  version = '1.0.6',      # Start with a small number and increase it with every change you make
   license='MIT',        # Chose a license from here: https://help.github.com/articles/licensing-a-repository
   description = 'Rubka Client Library',   # Give a short description about your library
   author = 'Host1let',                   # Type in your name
