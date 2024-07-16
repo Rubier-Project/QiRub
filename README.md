@@ -15,3 +15,36 @@ In fact when you import the ClientMessenger class or
 Make Sure you use the latest version of QiRub, for
 More info you can visit our github, also you can access
 To new News, Updates, Bug Fixes, ... with github
+
+# Installation
++ for python:
+      `pip install QiRub`
++ by git:
+      `git clone https://github.com/Rubier-Project/QiRub`
+
+# Usage
+### import
+```python
+from QiRub import ClientMessenger
+
+app = ClientMessenger("AUTH", "KEY")
+```
+
+### account information
+```python
+from QiRub import ClientMessenger
+
+app = ClientMessenger("AUTH", "KEY")
+
+print(app.accountInfo) # you can use getMe method too
+```
+### print colorize data
+```python
+from QiRub import ClientMessenger, Parse
+
+app = ClientMessenger("AUTH", "KEY")
+parse = Parse()
+
+data = app.getMe()
+parse.JsonRichParse(data)
+```
