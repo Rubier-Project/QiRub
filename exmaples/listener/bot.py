@@ -26,3 +26,5 @@ while 1:
                     app.sendMessage(chat, "Error: Cannot get Text in front of `say`", msgid)
                 else:
                     app.sendMessage(chat, repeater, msgid)
+        else:
+            msgset.add(msgid)
