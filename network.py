@@ -97,7 +97,7 @@ class QiNetwork(object):
 
         heads = {"User-Agent": self.agent, "Referer": "https://rubika.ir"} if use_fake_useragent else {"Referer": "https://rubika.ir"}
 
-        net = httpx.Client(proxy=self.proxy)
+        net = httpx.Client(proxies=self.proxy)
 
         try:
             data = json.loads(self.enc.decrypt(json.loads(net.post(self.selectedApi, data=notData, headers=heads).text)['data_enc']))
