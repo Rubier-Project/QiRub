@@ -1,4 +1,5 @@
 from .network import QiNetwork
+from typing import Union
 import random
 
 class QiUpdater(object):
@@ -186,6 +187,16 @@ class QiUpdater(object):
     def pinnedMessageIds(self) -> list:
         return self.getLastChat['pinned_last_message_ids'] if type(self.getLastChat) == dict and 'pinned_last_message_ids' in self.getLastChat.keys() else "Null"
     
+    @property
+    def replyMessageInfo(self) -> Union[str]:
+        replx = self.networkClient.option({"object_guid": self.chatId, "message_ids": [self.lastMessageId]}, "getMessagesByID")['data']['messages'][0]
+        if not 'reply_to_message_id' in replx.keys():
+            return {"is_reply": False}
+        else:
+            data = self.networkClient.option({"object_guid": self.chatId, "message_ids": [replx['reply_to_message_id']]}, "getMessagesByID")['data']['messages'][0]
+            data['is_reply'] = True
+            return data
+
     def replyTo(self, text: str) -> dict:
         """
         Send a Message and reply on that
