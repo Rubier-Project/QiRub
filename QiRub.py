@@ -31,7 +31,7 @@ import io
 import os
 import base64
 
-__version__ = "1.0.6"
+__version__ = "1.0.7"
 
 class ClientMessenger(object):
     def __init__(self, AuthToken: str, PrivateKey: str, UseFakeUserAgent: bool = True, Proxy = None):
