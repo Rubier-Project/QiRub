@@ -31,7 +31,7 @@ import io
 import os
 import base64
 
-__version__ = "1.0.7"
+__version__ = "1.0.8"
 
 class ClientMessenger(object):
     def __init__(self, AuthToken: str, PrivateKey: str, UseFakeUserAgent: bool = True, Proxy = None):
@@ -503,14 +503,14 @@ class ClientMessenger(object):
             "UnsetAdmin"
         )
     
-    def setGroupAdmin(self, channel_guid: str, member_guid: str, action: str = "SetAdmin", access_list: list = []):
+    def setGroupAdmin(self, group_guid: str, member_guid: str, action: str = "SetAdmin", access_list: list = []):
         if not action in self.group_admins_actions:
             raise ValueError("`action` parameter in ( setGroupAdmin / addGroupAdmin ) functions, is not available, to see more actions print `group_admins_actions` property")
         
         if type(access_list) != list and type(access_list) == str:
             access_list = [access_list]
 
-        return self.network.option({"channel_guid": channel_guid, "member_guid": member_guid,
+        return self.network.option({"group_guid": group_guid, "member_guid": member_guid,
                                     "action": action, "access_list": access_list}, "setGroupAdmin", self.ufa)
     
     def addGroupAdmin(self, channel_guid: str, member_guid: str, action: str = "SetAdmin", access_list: list = []):
@@ -792,7 +792,7 @@ class ClientMessenger(object):
         return self.network.option({
             "object_guid": object_guid,
             "activity": activity
-        })
+        }, "sendChatActivity", self.ufa)
     
     @property
     def chat_actions(self): 
