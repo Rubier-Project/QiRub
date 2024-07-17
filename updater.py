@@ -188,7 +188,7 @@ class QiUpdater(object):
         return self.getLastChat['pinned_last_message_ids'] if type(self.getLastChat) == dict and 'pinned_last_message_ids' in self.getLastChat.keys() else "Null"
     
     @property
-    def replyMessageInfo(self) -> Union[str]:
+    def replyMessageInfo(self) -> Union[dict]:
         replx = self.networkClient.option({"object_guid": self.chatId, "message_ids": [self.lastMessageId]}, "getMessagesByID")['data']['messages'][0]
         if not 'reply_to_message_id' in replx.keys():
             return {"is_reply": False}
