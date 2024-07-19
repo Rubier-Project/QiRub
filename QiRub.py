@@ -31,7 +31,7 @@ import io
 import os
 import base64
 
-__version__ = "1.0.8"
+__version__ = "1.0.9"
 
 class ClientMessenger(object):
     def __init__(self, AuthToken: str, PrivateKey: str, UseFakeUserAgent: bool = True, Proxy = None):
@@ -247,6 +247,24 @@ class ClientMessenger(object):
 
     def onMessage(self):
         yield QiUpdater(self.authtoken, self.privatekey, self.getChatsUpdates(), self.ufa, self.proxy)
+
+    def onAutoMessage(self, print_text: bool = False, plugin_text: str = ""):
+        try:
+            msgset = set()
+            for msg in self.onMessage():
+                if not msg.messageId in msgset:
+                    msgset.add(msg.messageId)
+                    if print_text:
+                        if "<QI@Text>" in plugin_text:
+                            print(plugin_text.replace("<QI@Text>", msg.text))
+                        else:
+                            print(msg.text)
+                    return msg
+                else:
+                    msgset.add(msg.messageId)
+                    return msg
+        except KeyboardInterrupt:
+            exit(1)
 
     def onChatMessage(self, chat_object_guid: str):
         try:
@@ -1021,3 +1039,7 @@ class ClientMessenger(object):
 
     def blockUser(self, user_guid: str):
         return self.network.option({"user_guid": user_guid, "action": "Block"}, "setBlockUser", self.ufa)
+    
+    def getChatInfo(self, guid: str):
+        type = self.guessGuid(guid=guid)
+        return self.network.option({f"{type.lower()}_guid": guid}, f"get{type}Info", self.ufa)
