@@ -38,7 +38,7 @@ class QiNetwork(object):
         self.auth = AuthToken
         self.key = PrivateKey
         self.proxy = Proxy
-        self.agent = fake_useragent.UserAgent().random
+        self.agent = fake_useragent.UserAgent()
 
         self.enc = encryption(self.auth, self.key)
         
@@ -95,9 +95,9 @@ class QiNetwork(object):
             "data_enc": encs
         })
 
-        heads = {"User-Agent": self.agent, "Referer": "https://rubika.ir"} if use_fake_useragent else {"Referer": "https://rubika.ir"}
+        heads = {"User-Agent": self.agent.random, "Referer": "https://rubika.ir"} if use_fake_useragent else {"Referer": "https://rubika.ir"}
 
-        net = httpx.Client(proxies=self.proxy)
+        net = httpx.Client(proxy=self.proxy)
 
         try:
             data = json.loads(self.enc.decrypt(json.loads(net.post(self.selectedApi, data=notData, headers=heads).text)['data_enc']))
@@ -111,7 +111,7 @@ class QiNetwork(object):
     def upload(self, file:str, fileName:str=None, chunkSize:int=131072):
 
         if isinstance(file, str):
-            if self.checkLink(file):
+            if file.startswith("http"):
                 file:bytes = httpx.get(file).text 
                 mime:str = self.getMimeFromByte(bytes=file)
                 fileName = fileName or self.generateFileName(mime=mime)
