@@ -48,3 +48,8 @@ parse = Parse()
 data = app.getMe()
 parse.JsonRichParse(data)
 ```
+
+# Update 1.1.0
++ Added Method `onAutoMessage`
++ Added Method `downloadSomething`
++ Added New Module `urllib3`
