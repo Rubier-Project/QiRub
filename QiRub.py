@@ -34,7 +34,7 @@ import base64
 
 class ClientMessenger(object):
 
-    __version__ = "1.1.0"
+    __version__ = "1.1.1"
     __github__ = "https://github.com/Rubier-Project/QiRub"
 
     def __init__(self, AuthToken: str, PrivateKey: str, UseFakeUserAgent: bool = True, Proxy = None):
@@ -1092,3 +1092,28 @@ class ClientMessenger(object):
     def getChatInfo(self, guid: str):
         type = self.guessGuid(guid=guid)
         return self.network.option({f"{type.lower()}_guid": guid}, f"get{type}Info", self.ufa)
+    
+    def getMessagesInfo(self, object_guid: str, message_ids: list):
+        if not type(message_ids) == list and type(message_ids) == str:
+            message_ids = [message_ids]
+
+        return self.network.option({"object_guid": object_guid, "message_ids": [message_ids]}, "getMessagesByID")
+    
+    def getMessagesInfoByArray(self, object_guids: list, message_ids: list):
+        if not type(object_guids) == list and type(object_guids) == str:
+            object_guids = [object_guids]
+
+        if not type(message_ids) == list and type(message_ids) == str:
+            message_ids = [message_ids]
+
+        if not len(object_guids) == message_ids:
+            raise ValueError("The Length of `object_guids` and `message_ids` are not equal,\
+                              Please Set them together")
+        
+        dbs = {}
+
+        for guid in object_guids:
+            for message in message_ids:
+                dbs[guid] = self.getMessagesInfo(message)
+        
+        return dbs
