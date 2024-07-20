@@ -31,9 +31,12 @@ import io
 import os
 import base64
 
-__version__ = "1.0.9"
 
 class ClientMessenger(object):
+
+    __version__ = "1.0.9"
+    __github__ = "https://github.com/Rubier-Project/QiRub"
+
     def __init__(self, AuthToken: str, PrivateKey: str, UseFakeUserAgent: bool = True, Proxy = None):
         self.authtoken = AuthToken
         self.privatekey = PrivateKey.replace("-----BEGIN PRIVATE KEY-----\n", "").replace("\n-----END PRIVATE KEY-----", "")
@@ -235,6 +238,14 @@ class ClientMessenger(object):
             return "qirubika"
         except Exception:
             return "qirubika"
+        
+    def getFileName(self, fname: str):
+        if "/" in fname:
+            return fname.split("/")[-1]
+        elif "\\" in fname:
+            return fname.split("\\")[-1]
+        else:
+            return fname
 
     def getMe(self):
         return self.network.option({}, "getUserInfo", self.ufa)
@@ -628,6 +639,44 @@ class ClientMessenger(object):
             input_data=input,
             use_fake_useragent=self.ufa
         )
+    
+    def downloadSomething(self, accessHashRec:str, fileId:str, dcId:str, size:int, writeFileName: str = None, attempt:int=0, maxAttempts:int=2):
+        """
+        Download Something and Save in Memory
+        """
+        try:
+            downloaded = self.network.download(accessHashRec, fileId, dcId, size)
+            fn = self.getFileName(writeFileName) if writeFileName is not None else self.network.generateFileName(self.network.getMimeFromByte(downloaded))
+
+            with open(fn, 'w') as First:
+                pass 
+
+            with open(fn, 'wb') as FN:
+                FN.write(downloaded)
+
+            return {
+                "status": "OK",
+                "status_det": "OK",
+                "data": {
+                    "download_info": {
+                        "access_hash_rec": accessHashRec,
+                        "file_id": fileId,
+                        "dc_id": dcId,
+                        "size": size
+                    },
+                    "local_info": {
+                        "writed_file_name": fn,
+                        "date_time": time.ctime(time.time())
+                    }
+                }
+            }
+        
+        except Exception as ERROR:
+            return {
+                "status": "OK",
+                "status_det": "ERROR",
+                "description": str(ERROR)
+            }
     
     def sendFile(self, objectGuid:str, file:str, messageId:str, text:str, fileName:str) -> dict:
         return self.__sendFileInline(
