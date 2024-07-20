@@ -34,7 +34,7 @@ import base64
 
 class ClientMessenger(object):
 
-    __version__ = "1.0.9"
+    __version__ = "1.1.0"
     __github__ = "https://github.com/Rubier-Project/QiRub"
 
     def __init__(self, AuthToken: str, PrivateKey: str, UseFakeUserAgent: bool = True, Proxy = None):
