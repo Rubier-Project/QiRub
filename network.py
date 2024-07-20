@@ -15,6 +15,7 @@ import fake_useragent
 import json
 import filetype
 
+from urllib3 import PoolManager, ProxyManager
 from .crypto import encryption
 
 class ProxyType(object):
@@ -59,6 +60,8 @@ class QiNetwork(object):
         ]
 
         self.selectedApi = QiStream.choiceObject(self.apis)
+
+        self.http = ProxyManager(self.proxy) if self.proxy else PoolManager()
     
     def checkLink(self, link: str):
         if link.startswith("http://") or link.startswith("https://"):
@@ -178,3 +181,44 @@ class QiNetwork(object):
                 requestSendFileData["mime"] = mime
                 requestSendFileData["size"] = len(file)
                 return requestSendFileData
+            
+    def download(self, accessHashRec:str, fileId:str, dcId:str, size:int, chunkSize:int=262143, attempt:int=0, maxAttempts:int=2):
+        headers:dict = {
+            "auth": self.newAuth,
+            "access-hash-rec": accessHashRec,
+            "dc-id": dcId,
+            "file-id": fileId,
+            "Host": f"messenger{dcId}.iranlms.ir",
+            "client-app-name": "Main",
+            "client-app-version": "3.5.7",
+            "client-package": "app.rbmain.a",
+            "client-platform": "Android",
+            "Connection": "Keep-Alive",
+            "Content-Type": "application/json",
+            "User-Agent": "okhttp/3.12.1"
+        }
+
+
+        response = self.http.request(
+            "POST",
+            url=f"https://messenger{dcId}.iranlms.ir/GetFile.ashx",
+            headers=headers,
+            preload_content=False
+        )
+
+        data:bytes = b""
+
+        for downloadedData in response.stream(chunkSize):
+            try:
+                if downloadedData:
+                    data += downloadedData
+
+                if len(data) >= size:
+                    return data
+            except Exception:
+                if attempt <= maxAttempts:
+                    attempt += 1
+                    print(f"\nError downloading file! (Attempt {attempt}/{maxAttempts})")
+                    continue
+
+                raise TimeoutError("Failed to download the file!")
