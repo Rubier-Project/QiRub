@@ -52,4 +52,5 @@ parse.JsonRichParse(data)
 # Update 1.1.0
 + Added Method `onAutoMessage`
 + Added Method `downloadSomething`
++ Added Method `getChatInfo`
 + Added New Module `urllib3`
